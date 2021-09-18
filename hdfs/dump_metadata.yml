@@ -1,0 +1,113 @@
+# Yaml file to configure the correct way to dump the csv data into the warehouse
+categoria: # The csv file name
+  delimiter: '|' # The delimiter to be used in parsing
+  validations: # List of Validations that should be ran for the specified columns
+    id_categoria: # Column name that will be validated
+      - 'unique' # Validation to be ran( unique -> checks if the column can be used as primary key in the table)
+      - 'null'   # Validation to be ran( null -> checks if there are any null values in the column)
+    perc_parceiro:
+      - 'null'
+
+cidade:
+  delimiter: '|'
+  partition:
+    column: id_estado
+    type: str
+  validations:
+    id_estado:
+      - 'null'
+    id_cidade:
+      - 'null'
+
+cliente:
+  delimiter: '|'
+  partition: # Partition configuration for the warehouse (Only one column allowed)
+    column: flag_ouro # Column name that will be used to partition the data
+    type: str # Column data type. Used to differentiate date partitions or string partitions
+  validations:
+    id_cliente:
+      - 'unique'
+      - 'null'
+    nm_cliente:
+      - 'null'
+
+estado:
+  delimiter: '|'
+
+filial:
+  delimiter: '|'
+  validations:
+    id_filial:
+      - 'unique'
+      - 'null'
+    ds_filial:
+      - 'unique'
+      - 'null'
+    id_cidade:
+      - 'null'
+
+item_pedido:
+  delimiter: '|'
+  validations:
+    id_pedido:
+      - 'null'
+    id_produto:
+      - 'null'
+    quantidade:
+      - 'null'
+    vr_unitario:
+      - 'null'
+
+parceiro:
+  delimiter: '|'
+  validations:
+    id_parceiro:
+      - 'unique'
+      - 'null'
+    nm_parceiro:
+      - 'unique'
+      - 'null'
+
+pedido:
+  delimiter: '|'
+  partition:
+    column: dt_pedido
+    type: date
+  validations:
+    id_pedido:
+      - 'null'
+    dt_pedido:
+      - 'null'
+    id_parceiro:
+      - 'null'
+    id_cliente:
+      - 'null'
+    id_filial:
+      - 'null'
+    vr_total_pago:
+      - 'null'
+
+produto:
+  delimiter: '|'
+  validations:
+    id_produto:
+      - 'unique'
+      - 'null'
+    ds_produto:
+      - 'null'
+    id_subcategoria:
+      - 'null'
+
+subcategoria:
+  delimiter: '|'
+  partition:
+    column: id_categoria
+    type:
+  validations:
+    id_subcategoria:
+      - 'unique'
+      - 'null'
+    ds_subcategoria:
+      - 'null'
+    id_categoria:
+      - 'null'

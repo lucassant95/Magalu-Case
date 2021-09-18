@@ -1,0 +1,86 @@
+version: "3.8"
+#SIMULATING AN HDFS WITH DOCKER VOLUMES
+volumes:
+  hdfs:
+    name: hdfs
+    driver: local
+    driver_opts:
+      device: $PWD/hdfs/
+      type: none
+      o: bind
+
+services:
+    #JUPYTER NOTEBOOK TO PERFORM ETLs
+    jupyter:
+        build: ./
+        user: root
+        container_name: jupyter
+        working_dir: /opt/workspace
+        environment:
+          - GRANT_SUDO=yes
+          - PYSPARK_PYTHON=python3
+          - PYSPARK_DRIVER_PYTHON=python3
+        ports:
+            - "8888:8888"
+        volumes:
+            - hdfs:/opt/workspace/
+
+    #AIRFLOW CONFIGURATIONS
+    airflow:
+        build: ./Airflow Spark Docker
+        container_name: airflow
+        environment:
+          - PYSPARK_PYTHON=python3
+          - PYSPARK_DRIVER_PYTHON=python3
+        volumes:
+          - ./DAGs:/usr/local/airflow/dags #DAG folder
+          - hdfs:/opt/workspace/
+        ports:
+          - "8080:8080"
+        command: webserver
+
+    #SPARK CLUSTER ENVIRONMENT SIMULATION
+    spark-master:
+        build: ./SparkEnviron/spark-master/
+        container_name: spark-master
+        ports:
+          - "8083:8080"
+          - "7077:7077"
+        environment:
+          - INIT_DAEMON_STEP=setup_spark
+          - "SPARK_EXECUTOR_MEMORY=2g"
+          - PYSPARK_PYTHON=python3
+          - PYSPARK_DRIVER_PYTHON=python3
+        working_dir: /opt/workspace
+        volumes:
+          - hdfs:/opt/workspace
+    spark-worker-1:
+        build: ./SparkEnviron/spark-worker/
+        container_name: spark-worker-1
+        depends_on:
+          - spark-master
+        ports:
+          - "8081:8081"
+        environment:
+          - "SPARK_MASTER=spark://spark-master:7077"
+          - "SPARK_EXECUTOR_MEMORY=2g"
+          - PYSPARK_PYTHON=python3
+          - PYSPARK_DRIVER_PYTHON=python3
+        working_dir: /opt/workspace
+        volumes:
+          - hdfs:/opt/workspace
+    spark-worker-2:
+      build: ./SparkEnviron/spark-worker/
+      container_name: spark-worker-2
+      depends_on:
+        - spark-master
+      ports:
+        - "8082:8081"
+      environment:
+        - "SPARK_MASTER=spark://spark-master:7077"
+        - "SPARK_EXECUTOR_MEMORY=2g"
+        - PYSPARK_PYTHON=python3
+        - PYSPARK_DRIVER_PYTHON=python3
+      working_dir: /opt/workspace
+      volumes:
+          - hdfs:/opt/workspace
