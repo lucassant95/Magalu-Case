@@ -1,8 +1,7 @@
-version: "3.8"
+version: "3.3"
 #SIMULATING AN HDFS WITH DOCKER VOLUMES
 volumes:
   hdfs:
-    name: hdfs
     driver: local
     driver_opts:
       device: $PWD/hdfs/
@@ -43,6 +42,8 @@ services:
     spark-master:
         build: ./SparkEnviron/spark-master/
         container_name: spark-master
+        depends_on:
+          - metastore
         ports:
           - "8083:8080"
           - "7077:7077"
@@ -84,3 +85,23 @@ services:
       working_dir: /opt/workspace
       volumes:
           - hdfs:/opt/workspace
+
+    #External Hive Metastore
+    metastore:
+      image: bde2020/hive:2.3.2-postgresql-metastore
+      container_name: metastore
+      env_file:
+        - ./Hive/hadoop-hive.env
+      command: /opt/hive/bin/hive --service metastore
+      environment:
+        SERVICE_PRECONDITION: "hive-metastore-postgresql:5432"
+      depends_on:
+        - hive-metastore-postgresql
+      ports:
+        - "9083:9083"
+
+    hive-metastore-postgresql:
+      image: bde2020/hive-metastore-postgresql:2.3.0
+      container_name: hive-metastore-postgresql
+      volumes:
+        - ./metastore-postgresql/postgresql/data:/var/lib/postgresql/data

@@ -108,7 +108,7 @@ RUN export SPARK_HOME
 
 RUN usermod -a -G sudo airflow
 ##
-#RUN adduser airflow sudo
+
 #
 RUN chown -R airflow: ${AIRFLOW_HOME}
 RUN mkdir -p /opt/workspace/
@@ -127,6 +127,7 @@ RUN chmod -R 777 /usr/local/airflow/logs/
 
 EXPOSE 8080 5555 8793
 RUN airflow users  create --role Admin --username admin --email admin --firstname admin --lastname admin --password admin
+COPY ./hive-site.xml /usr/local/spark
 USER airflow
 ENV PYSPARK_PYTHON=python3
 RUN export PYSPARK_PYTHON
